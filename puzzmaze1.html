@@ -1,0 +1,742 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"> 
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Every Which Way Maze</title>
+<!----><script src="https://www.w3schools.com/lib/w3.js"></script>
+<SCRIPT type="text/JavaScript" SRC= <a class="html-attribute-value html-resource-link" target="_blank" href="jslib.js" rel="noreferrer noopener">jslib.js</a> </SCRIPT>
+<!--  <span class="html-tag">&lt;/SCRIPT&gt;</span>-->
+<SCRIPT type="text/JavaScript" SRC="jslib2a.js"></SCRIPT>
+<SCRIPT type="text/JavaScript" SRC="jslibpp.js"></SCRIPT>
+<SCRIPT type="text/JavaScript" SRC="jslibxr.js"></SCRIPT>
+<script type="text/JavaScript" src="jquery.js"></script>
+<script type="text/JavaScript" src= <a class="html-attribute-value html-resource-link" target="_blank" href="jquery-ui.js" rel="noreferrer noopener">jquery-ui.js</a> </script>
+<!---->
+<!--<script type="text/JavaScript" src="jquery-3.7.1.min.js"></script> -->
+<!----><script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js" integrity="sha256-xLD7nhI62fcsEZK2/v8LsBcb4lG7dgULkuXoXB/j91c=" crossorigin="anonymous"></script>
+<!--<script type="text/JavaScript">-->
+
+//alert ('start');
+//problem with end handler  
+//end routine is in helper object.  I think it may not be preserved.....
+//helper method is available but is not executed....
+//end command doesn't stop process.
+//mazeendinst seems to fire correctly, so it is not being executed.
+//End command not in stack
+//not recognizing the END case.
+
+function popWindow(w) {
+  window.open(w,"popup","toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=1,resizable=1,width=500,height=450");
+}
+
+function changeWindow(newRef, name) {
+ window.open(newRef, name);
+}
+
+
+var ctlPanel;
+
+
+
+
+/*
+* DisplayPnlMaze inherits DisplayPnlBase Class
+* interfaces with user display panel
+* Instantiate: var displayPnlXr = DisplayPnlXr(dispArgs);
+*     dispArgs is an object containing:
+*     move is the jquery search string for set of move cells.
+*
+* privileged methods:
+* putMove (m, n): reset the background color of the previous move-cell
+*      and set the background coloer of the new move-cell with animation and
+*     execute the callback function if present.
+*     m is the index of the new cell
+*     n is the callback function 
+*
+* getMove(m): return the value of the move cell.
+*     m is the index value of the requested cell.
+*
+* setMoves(a): update the value of each move-cell
+*     a contains an array of move-cell values.
+*/ 
+
+DisplayPnlMaze  = function (dispArgs) {
+  var $moves = $(dispArgs.move),
+      currMove = 0,
+      local = {
+        testM: function (m) {
+           if (m < 0 || m === $moves.length || m > $moves.length) {
+              throw rcExcept ('Move out of Bounds');
+           }
+        }
+      },
+      helper = {},
+      that = DisplayPnlBase (dispArgs.dispBase, dispArgs.msg, helper),
+      methods = {
+        putMove: function(m, n) {
+           var nextF = ((typeof n === 'function') ? n : function (){});
+           local.testM (m);
+           if (m === currMove) {
+              $moves.eq(currMove).animate({backgroundColor:'red'},100, nextF);
+           } else {
+              $moves.eq(currMove).animate({backgroundColor:'white'},100,  
+                function () {$moves.eq(m).animate({backgroundColor:'red'},100, nextF)});
+              currMove = m;
+           }
+        },
+        getMove: function (m) {
+           local.testM (m);
+           return $moves.eq(m).val();          
+        },
+        getLength: function () {
+            return $moves.length;
+        },
+        setMoves: function (a) {
+           $moves.each(function(i) {
+              $(this).val(a[i]);
+           });
+        }
+      };
+  $moves.on('focus', function () {
+           this.blur();
+      });
+  
+  helper.augment([that, methods]);
+  return that;
+};
+
+
+
+/*
+* CustomMaze inherits customBase Class
+* Implements custom rules for the maze version of the puzzle model.
+* Instantiate: var custom = CustomMaze(displayMaze);
+* privileged methods:
+* parseStep(inst): convert instruction string to array of method references
+*      and call arguments.
+* putEndInst(e): store reference to computer object's end instruction method.
+*
+* local method:
+*
+* helper method:
+*/ 
+
+ CustomMaze  = function (displayPnl, memoryPnl) {
+  var fstArray = ['Enter', 
+                  'Right', 'Left', 'Right', 'Left', 'Right', 'Left',
+                  'Down', 'Up', 'Down', 'Down', 'Left', 'Down',
+                  'Up', 'Right', 'Left', 'Up', 'Down', 'Left',
+                  'Down', 'Up', 'Down', 'Up', 'Up', 'Left',
+                  'Up', 'Down', 'Left', 'Right', 'Left', 'Up',
+                  'Right', 'Left', 'Up', 'Left', 'Right', 'Left',
+                  'Exit'],
+      xMove = -1,
+      yMove = 0,
+      currMove = 0,
+      currDir = '',
+      oBound = 'Move out of bounds',
+      lastMove = displayPnl.getLength() - 1,
+      randDir = RandomInt(4), 
+      randLen = RandomInt(6),
+      superClass = {},
+      helper = {},
+      local = {
+         calcM: function (x, y) {
+           if (x < 0 || x > 6 || y < 0 || y > 5) {
+              throw rcExcept (oBound);
+           }
+           if (y < 5 && x > 5 ) {
+              throw rcExcept (oBound);
+           }
+
+nextF = ((typeof n === 'function') ? n : function (){});
+ 
+           return ((x === 6 && y ===  5 ) ? 37 : x * 6 + y + 1 );
+           
+         },
+         doMove: function () {
+            currMove = local.calcM(xMove, yMove)
+            displayPnl.putMove(currMove, that.nextCycle);
+         },
+         upOne: function () {
+           xMove = xMove - 1;
+           local.doMove ();
+         },
+         downOne: function () {
+           xMove = xMove + 1;
+           local.doMove ();
+         },
+         leftOne: function () {
+           yMove = yMove - 1;
+           local.doMove ();
+         },
+         rightOne: function () {
+           yMove = yMove + 1;
+           local.doMove ();
+         },
+         initVars: function () {
+            xMove = -1;
+            yMove = 0;
+            currMove = 0;
+            displayPnl.putMove(0);
+          },
+         mazeEndInst: function () {
+           that.init ();
+           helper.endInst ();
+         }
+      },
+      that = CustomBase (helper, displayPnl, memoryPnl),
+      methods = {
+         parseStep: function (i) {
+            var parsedInst = i, 
+                cmd = parsedInst,
+                movArgs,
+                parsedSet = [];
+            switch (cmd) {
+            case 'END':
+              parsedSet.push([local.mazeEndInst]);
+              break;
+            default:
+              var numMove = Number(cmd),
+                  dir = displayPnl.getMove(currMove),
+                  dirObj,
+                  x;
+              if(numMove === 'NaN' || numMove === 0) {
+                  throw rcExcept('Invalid Move');
+              }
+              switch (dir) {
+              case 'Up':
+                dirObj = local.upOne;
+                break;
+              case 'Down':
+                dirObj = local.downOne;
+                break;
+              case 'Left':
+                dirObj = local.leftOne;
+                break;
+              case 'Right':
+                dirObj = local.rightOne;
+                break;
+              case 'Enter':
+                dirObj = local.downOne;
+                break;
+              default:
+                throw rcExcept('Invalid direction');
+                break;
+              }
+              for (x=0; x < numMove; x++) {
+                parsedSet.push([dirObj]);
+              }
+
+            }
+            return parsedSet;
+         },
+         init: function () {
+            local.initVars ();
+         },
+         putEndInst: function (e) {
+           helper.endInst = e;
+         },
+         fstMaze: function () {
+           displayPnl.setMoves(fstArray);
+         },
+         newMaze: function () {
+           var x = 6,
+               y = 5,
+               prevX = 6,
+               prevY = 5,
+               moves = [],
+               dir = ['Up', 'Right', 'Left', 'Down'],
+               d = 0,
+               prevD = 0,
+               j = 0,
+               m = 37,
+               n = 0,
+               checkDir;
+           moves[0] = 'Enter';
+           moves[37] = 'Exit';
+           while (y > 0) {
+              try {
+// get direction
+                prevD = d;
+                if (m === 37) { 
+                   d = 0;
+                } else {
+                   while (d === prevD) {    
+                      d = randDir.nextValue();
+                   }
+                }
+//alert ('d: ' + dir[d]);
+// get len
+                if (y === 5) {
+                   j = 5;
+                   while (j > 4) {
+                     j = randLen.nextValue() + 1;
+                   }
+
+                } else {
+                   j = randLen.nextValue() + 1;
+                }
+// make move
+                prevX = x;
+                prevY = y;
+                switch (d) {
+                case 0:
+                  x = x - j;
+                break;
+                case 1:
+                  y = y + j
+                break;
+                case 2:
+                  y = y - j
+                break;
+                case 3:
+                  x = x + j
+                break;
+                }             
+
+
+                m = local.calcM(x, y);
+                if (typeof moves [m] === 'undefined') {
+                    moves [m] = dir [3-d];
+                } else {
+                    throw rcExcept('Duplicate cell')
+                }
+
+              } catch (e) {
+                 if (e.name === 'Game Error') {
+                   x = prevX;
+                   y = prevY;
+                   d = prevD;
+                } else {
+                   throw e;
+                }
+
+  
+              }  // end try
+            } // end while
+// fill in rest with random directions
+
+            for (x = 0; x < 6; x++) {
+              for (y = 0; y < 6; y++) {
+              try {
+                m = local.calcM(x, y); 
+                if (typeof moves [m] === 'undefined') {
+                   n = local.calcM(x, 5);
+                   if (moves [n] === dir [3] || y === 0) {
+                      d = 1;
+                      while (d === 1) {
+                         d = randDir.nextValue();
+                      } 
+                   } else {
+                     if (y === 5) {
+                         d = 3;
+                         while (d === 3) {
+                            d = randDir.nextValue();
+                         } 
+                     } else {
+                         d = randDir.nextValue();
+                     }
+                   }
+                   moves [m] = dir[d];
+                }
+
+              } catch (e) {
+                 if (e.name === 'Game Error') {
+//alert (x + ', ' + y);
+                } else {
+                   throw e;
+                }
+
+              }  // end try
+
+              }  // end for y
+            }  // end for x           
+
+
+
+
+            displayPnl.setMoves(moves);
+         }     
+      };
+
+  helper.augment([that, methods, superClass]);
+//alert ('customMaze: ' + helper.endInst); method displayed correctly.
+  that.init();
+  that.fstMaze(fstArray);
+  return that;
+};
+
+
+
+
+
+/*
+* CtlPanel inherits FunctionClass Class
+* interfaces with user control panel
+* Instantiate: var ctlPanel = CtlPanel();
+* privileged methods: 
+* 
+*
+*
+* 
+*
+*
+*
+*
+*/ 
+
+CtlPanelMaze = function (customObj, displayObj, dispArgs) {
+  var helper = {
+      },
+      that = CtlPanel(customObj, displayObj, dispArgs, helper),
+      methods = {
+         newMazeButton: function() {
+              helper.getCustom().newMaze();
+              that.clearButton();
+         },
+         fstMazeButton: function() {
+              helper.getCustom().fstMaze();
+              that.clearButton();
+         }
+      };
+
+  helper.augment([that, methods]);
+  return that;
+
+};
+
+
+
+initObjects = function () {
+
+
+//   ctlPanel = CtlPanelMaze({customObj: CustomWGC});
+   ctlPanel = CtlPanelMaze(CustomMaze, DisplayPnlMaze,
+                        {move: '.move',
+                         dispBase: '#display_div',
+                         msg: '#msg_span'});
+
+};
+
+
+</script>
+
+
+
+<style type="text/css">
+ 
+body{
+margin:0;
+padding:0;
+line-height: 1.5em;
+}
+ 
+<!-- b{font-size: 110%;} -->
+em{color: red;}
+ 
+#maincontainer{
+width: 800px; /*Width of main container*/
+margin: 0; /* no Center container on page*/
+}
+ 
+#topsection{
+background: #EAEAEA;
+height: 70px; /*Height of top section*/
+}
+ 
+#topsection h1{
+margin: 0;
+padding-top: 20px;
+}
+ 
+#contentwrapper{
+float: left;
+width: 100%;
+}
+ 
+
+
+.contentcolumn1{
+float: left;
+width: 15%;
+}
+ 
+.headerdiv{
+width:75%
+}
+
+.contentcolumn2{
+float: left;
+width: 60%; 
+}
+ 
+.contentcolumn3{
+float: left;
+width: 30%; 
+}
+ 
+.centered{
+text-align:center;
+}
+
+.aleft{
+text-align:left;
+}
+
+.aright{
+text-align:right;
+}
+ 
+#leftcolumn{
+float: left;
+width: 180px; /*Width of left column in pixel*/
+margin-left: -840px; /*Set margin to that of -(MainContainerWidth)*/
+background: #C8FC98;
+}
+ 
+#rightcolumn{
+float: left;
+width: 190px; /*Width of right column*/
+margin-left: -190px; /*Set left margin to -(RightColumnWidth)*/
+background: #FDE95E;
+}
+
+.wholediv{
+width: 100%; 
+}
+
+.leftdiv{
+float: left;
+}
+ 
+.rightdiv{
+float: right;
+}
+
+.h100{height: 100%}
+
+.w29{width: 29%}
+
+.w50{width: 50%}
+
+.w10{width: 10%}
+ 
+.marginleft {
+margin-left:210px;
+}
+
+.marginright {
+margin-left:-50px;
+}
+
+
+.entry {margin: 2px 300px 1px 1px;}
+.maze {margin: 2px 0px 1px 0px;}
+.exit {margin: 2px 0px 1px 300px;}
+
+#footer{
+clear: left;
+width: 100%;
+background: black;
+color: #FFF;
+text-align: center;
+padding: 4px 0;
+}
+ 
+#footer a{
+color: #FFFF80;
+}
+ 
+.innertube{
+margin: 5px; /*Margins for inner DIV inside each column (to provide padding)*/
+margin-top: 0;
+}
+
+.bordered {
+    border: 2px solid darkblue;
+}
+img {margin:1px}
+.padded {
+    padding: 1px;
+} 
+ 
+</style>
+<link rel="stylesheet" type="text/css" href="basicstyle.css"> 
+ 
+</head>
+<body>
+<div id="maincontainer">
+<div id="contentwrapper">
+<!--<form name="form"> -->
+<div class='headerdiv centered'>
+<b>Every Which Way Maze</b><br>Contributed to Games Magazine by Bob Stanton</b>
+</div>
+<div class="contentcolumn1">
+<div class="innertube">
+<div align="center"><b>Moves</b></div>
+<div id="memory_div" class="bordered padded">
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+<div class='centered'>
+<span name='counter'>0</span>
+<input type=text name="inst" value="" size=3 maxlength=3>
+</div>
+</div>
+</div>
+</div>
+<div class="contentcolumn2">
+<div class="innertube">
+  <div class='centered'><b>Display</b></div>
+    <div id="display_div" class="bordered padded">
+<div class= 'centered'>  <!-- maze -->
+<input type="text" 
+class="move entry" value="-" size=5 maxlength=5
+onFocus="this.select()" onChange="checkNumeric(this)">
+<br>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<br>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<br>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<br>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<br>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<br>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<input type=text class="move maze" value="-" size=5 maxlength=5>
+<br>
+<input type=text class="move exit" value="-" size=5 maxlength=5>
+  
+</div> <!-- end maze -->
+
+      <div class='centered'>
+        <h3><span id="msg_span"></span>&nbsp;</h3>
+      </div>
+    </div>
+    <div align="center"><b>Control</b></div>
+    <div id="control_div" class="bordered padded">
+      <div class='centered'>
+        <input type="button" id="initButton" value="reset" title="reset display settings" onClick="ctlPanel.initButton()"> 
+        <input type="button" id="clearButton" value="clear" title="clear commands" onClick="ctlPanel.clearButton()"> 
+        <input type="button" id="stepButton" value="step" title="execute one command" onClick="ctlPanel.stepButton()"> 
+        <input type="button" id="runButton" value="run" title="execute all commands" onClick="ctlPanel.runButton()"> 
+        <input type="button" id="newmazeButton" value="new maze" title="create new maze" onClick="ctlPanel.newMazeButton()">
+        <input type="button" id="fstmazeButton" value="first maze" title="create first maze" onClick="ctlPanel.fstMazeButton()"> 
+        <input type="button" id="helpButton" value="help" title="display documentation" onClick="ctlPanel.helpButton('mazehelp.html')">
+
+      </div>
+      <div class='centered'>
+        <input type="button" id="execButton" value="execute" onClick="ctlPanel.execButton()"> 
+      </div>
+  </div>
+    <div align="center"><b>Command Examples</b></div>
+    <div id="info_div" class="bordered padded">
+<i>m</i> is an integer represening the the number of moves.  
+<br>
+<b><i>m</i></b>:
+Move <i>m</i> cells in the direction indicated by the current cell. 
+<br>
+<b>END</b>:
+End the program and reset the program to enable reexecution of commands 
+with step or run buttons. 
+    </div>
+</div>
+</div>
+<!--</form>-->
+</div>
+</div>
+</body>
+<script>
+$(document).ready(function(){
+
+   initObjects();
+ });
+</script>
+</html>

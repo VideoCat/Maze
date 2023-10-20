@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <title>Pete's Sandbox</title>
+    <link rel="stylesheet" type="text/css" href="basicstyle.css" />
+  </head>
+  <body>
+    <div class="dir">
+      <b>Table of contents</b>
+      <div id="vmenu">
+        <ul>
+          <li>
+            <a href="index.asp">Home</a>
+          </li>
+          <li>
+            <a href="gameindex.asp">Game Notes</a>
+          </li>
+          <li>
+            <a href="favindex.asp">Favorite Links</a>
+          </li>
+          <li>
+            <a href="mathindex.asp">Math Notes</a>
+          </li>
+          <li>
+            <a href="progindex.asp">Programming Notes</a>
+          </li>
+          <li>
+            <a href="300index.asp">300 Words</a>
+          </li>
+          <li>
+            <a href="#" onclick="iframes.chgIframe('pkdetail','puzznote.html')"
+              >Puzzles and Problems</a
+            >
+          </li>
+          <li>
+            <a href="#" onclick="iframes.chgIframe('pkdetail','puzzmaze1.html')"
+              >Every Which Way Maze Problem</a
+            >
+          </li>
+          <li>
+            <a
+              href="#"
+              onclick="iframes.chgIframe('pkdetail','puzzriver1.html')"
+              >Cross the River Problem - V1</a
+            >
+          </li>
+          <li>
+            <a
+              href="#"
+              onclick="iframes.chgIframe('pkdetail','puzzriver2.html')"
+              >Cross the River Problem - V2</a
+            >
+          </li>
+          <li>
+            <a href="#" onclick="iframes.chgIframe('pkdetail','mmind.html')"
+              >Code Breaker Game Version 1</a
+            >
+          </li>
+          <li>
+            <a href="#" onclick="iframes.chgIframe('pkdetail','mmind2.html')"
+              >Code Breaker Game Version 2</a
+            >
+          </li>
+          <li>
+            <a
+              href="#"
+              onclick="iframes.chgIframe('pkdetail','puzzknight1.html')"
+              >Knight's Tour</a
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="cont">
+      <iframe
+        width="100%"
+        height="100%"
+        src="puzznote.html"
+        id="pkdetail"
+      ></iframe>
+    </div>
+    <div class="ads">
+      <div class="aditem">
+        <a
+          href="https://twitter.com/sandboxpete"
+          class="twitter-follow-button"
+          data-show-count="false"
+          >Follow @sandboxpete</a
+        >
+        <script>
+          !(function (d, s, id) {
+            var js,
+              fjs = d.getElementsByTagName(s)[0],
+              p = /^http:/.test(d.location) ? "http" : "https";
+            if (!d.getElementById(id)) {
+              js = d.createElement(s);
+              js.id = id;
+              js.src = p + "://platform.twitter.com/widgets.js";
+              fjs.parentNode.insertBefore(js, fjs);
+            }
+          })(document, "script", "twitter-wjs");
+        </script>
+      </div>
+      <div class="aditem">
+        <a href="#" onclick="window.open('http://tomkonieczko.com/','popup')">
+          Tom's Web Page</a
+        >
+      </div>
+    </div>
+  </body>
+  <script language="JavaScript" src="jslib2a.js"></script>
+  <script type="text/JavaScript" src="jquery.js"></script>
+  <script type="text/JavaScript" src="jquery-ui.js"></script>
+  <script type="text/JavaScript">
+
+    IframeMgr = function () {
+    //$content = $('#pkcontent');
+    //$detail = $('#detail');
+      var helper = {},
+      $iframes = $('iframe'),
+      ifIndex = {},
+      that = FunctionClass(helper),
+      methods = {
+         chgIframe: function (frame, url) {
+            ifIndex[frame].attr('src', url);
+         }
+
+      };
+      helper.augment([that, methods]);
+
+      $iframes.each(function(i) {
+         ifIndex [$(this).attr('id')] = $($iframes[i]);
+      });
+      return that;
+
+    }
+
+    var iframes;
+
+
+
+
+    $(document).ready(function(){
+      iframes = IframeMgr();
+     });
+  </script>
+</html>
